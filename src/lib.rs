@@ -1,4 +1,4 @@
-//! # dmphase
+//! # freezeframe
 //!
 //! Dark-matter freeze-out beyond the assumption of kinetic equilibrium.
 //!
@@ -36,9 +36,9 @@
 //! [`models`].
 //!
 //! ```no_run
-//! use dmphase::prelude::*;
+//! use freezeframe::prelude::*;
 //!
-//! # fn main() -> dmphase::Result<()> {
+//! # fn main() -> freezeframe::Result<()> {
 //! // 100 MeV Dirac fermion with a vector mediator near the s-channel pole
 //! let model = SimplifiedModel::builder(Mediator::Vector)
 //!     .dm_mass(0.1)
@@ -78,10 +78,10 @@ pub use solver::{
     TracePoint,
 };
 
-/// Convenient glob import: `use dmphase::prelude::*;`.
+/// Convenient glob import: `use freezeframe::prelude::*;`.
 ///
 /// The crate's `Result` alias is deliberately *not* re-exported here so that
-/// it does not shadow `std::result::Result`; use `dmphase::Result`.
+/// it does not shadow `std::result::Result`; use `freezeframe::Result`.
 pub mod prelude {
     pub use crate::cosmology::Cosmology;
     pub use crate::error::Error;

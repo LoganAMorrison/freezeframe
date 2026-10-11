@@ -1,6 +1,6 @@
 //! Grid/tolerance convergence of the phase-space solution.
 //! cargo run --release --example convergence -- <mediator> <M> <m> <g>
-use dmphase::prelude::*;
+use freezeframe::prelude::*;
 
 fn main() -> std::result::Result<(), Box<dyn std::error::Error>> {
     let a: Vec<String> = std::env::args().skip(1).collect();

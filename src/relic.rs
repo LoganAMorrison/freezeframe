@@ -46,7 +46,7 @@ pub struct CouplingSolution {
 /// with `g` near the solution.
 ///
 /// ```
-/// # use dmphase::relic::{find_coupling, CouplingSearch};
+/// # use freezeframe::relic::{find_coupling, CouplingSearch};
 /// // toy: Ω = 0.12 (g / 0.3)^-2
 /// let sol = find_coupling(|g| Ok(0.12 * (g / 0.3_f64).powi(-2)), 1.0, &CouplingSearch::default()).unwrap();
 /// assert!((sol.coupling / 0.3 - 1.0).abs() < 1e-3);

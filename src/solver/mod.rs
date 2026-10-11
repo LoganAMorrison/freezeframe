@@ -293,8 +293,8 @@ impl Solution {
 /// Configures and runs a Boltzmann solver for one model.
 ///
 /// ```no_run
-/// use dmphase::prelude::*;
-/// # fn main() -> dmphase::Result<()> {
+/// use freezeframe::prelude::*;
+/// # fn main() -> freezeframe::Result<()> {
 /// let model = ScalarSinglet::new(57.0, 1.6e-3, QuarkScattering::Minimal)?;
 /// let sol = Solver::new(&model)
 ///     .trace_log(10.0, 1e3, 200)

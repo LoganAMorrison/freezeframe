@@ -18,9 +18,9 @@ use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::Mutex;
 use std::time::Instant;
 
-use dmphase::prelude::*;
-use dmphase::relic::CouplingSolution;
-use dmphase::Result;
+use freezeframe::prelude::*;
+use freezeframe::relic::CouplingSolution;
+use freezeframe::Result;
 
 #[derive(Clone, Copy, Debug, PartialEq)]
 enum Family {

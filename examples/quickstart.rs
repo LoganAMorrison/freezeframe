@@ -8,8 +8,8 @@
 use std::f64::consts::PI;
 use std::fs::File;
 
-use dmphase::prelude::*;
-use dmphase::scattering::Scatterer;
+use freezeframe::prelude::*;
+use freezeframe::scattering::Scatterer;
 
 /// A self-conjugate scalar of mass `m` annihilating through a heavy
 /// s-channel scalar of mass `big_m` and width `width` into electrons, with

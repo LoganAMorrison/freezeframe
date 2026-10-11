@@ -1,9 +1,9 @@
 //! Cross-check against the earlier reproduction of arXiv:1706.07433 (scenario B).
 use std::time::Instant;
 
-use dmphase::prelude::*;
+use freezeframe::prelude::*;
 
-fn main() -> dmphase::Result<()> {
+fn main() -> freezeframe::Result<()> {
     // (mass, λ_GG) pairs from the Fig. 3 scan
     let points = [
         (45.0, 1.75197334e-1),

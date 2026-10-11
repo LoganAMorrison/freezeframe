@@ -1,6 +1,6 @@
 //! Physical limits that the three solvers must reproduce.
 
-use dmphase::prelude::*;
+use freezeframe::prelude::*;
 
 /// `σ v_cms = a + b β²` with `β² = 1 − 4m²/s`: s- plus p-wave.
 fn s_plus_p_wave(m: f64, a: f64, b: f64) -> impl Fn(f64) -> f64 {

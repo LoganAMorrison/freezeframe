@@ -1,4 +1,4 @@
-"""Demonstration figures for dmphase (reads runs/ produced by scripts/run_scans.sh).
+"""Demonstration figures for freezeframe (reads runs/ produced by scripts/run_scans.sh).
 
 python scripts/make_figures.py [RUNS_DIR] [OUT_DIR]
 """

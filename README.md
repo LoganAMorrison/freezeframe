@@ -1,4 +1,4 @@
-# dmphase
+# freezeframe
 
 **Dark-matter freeze-out beyond kinetic equilibrium.** A dependency-free Rust crate that solves the
 Boltzmann equation for the full dark-matter phase-space density `f_χ(x, q)` for any user-supplied
@@ -25,13 +25,13 @@ Timings are for one model point on one core (Apple-silicon laptop), `x = m/T ∈
 
 ```toml
 [dependencies]
-dmphase = { path = "path/to/dmphase" }
+freezeframe = { path = "path/to/freezeframe" }
 ```
 
 ```rust
-use dmphase::prelude::*;
+use freezeframe::prelude::*;
 
-fn main() -> dmphase::Result<()> {
+fn main() -> freezeframe::Result<()> {
     // 0.47 GeV Dirac fermion, pseudoscalar mediator at 1 GeV coupled to e and μ
     let g = 5.56e-5;
     let model = SimplifiedModel::builder(Mediator::Pseudoscalar)
@@ -95,7 +95,7 @@ Conventions (identical to the paper):
 
 ### Computing γ(T) from a matrix element
 
-`dmphase::scattering` evaluates Eqs. (6–7) of the paper,
+`freezeframe::scattering` evaluates Eqs. (6–7) of the paper,
 
 ```
 γ(T) = 1/(48π³ g_χ m³ T) Σ_f ∫ dω g_f(1 ∓ g_f) k⁴⟨|M|²⟩_t,
@@ -105,14 +105,14 @@ k⁴⟨|M|²⟩_t = (1/8) ∫_{−4k_cm²}^0 dt (−t) |M|²(s, t),   s = m² + 
 from an elastic matrix element summed over all spins and colors:
 
 ```rust
-use dmphase::scattering::{RateTable, Scatterer};
+use freezeframe::scattering::{RateTable, Scatterer};
 let msq = |s: f64, t: f64| /* |M|²(χ e → χ e) */;
 let gamma = |t: f64| Scatterer::fermion_pair(0.000511, msq).momentum_transfer_rate(m_chi, g_chi, t);
 // optional: tabulate once (ln γ vs ln T, pieces split at discontinuities such as T_QCD)
 let table = RateTable::new(m_chi * 1e-9, 2.0 * m_chi, 40, &[], gamma)?;
 ```
 
-### Bundled models (`dmphase::models`)
+### Bundled models (`freezeframe::models`)
 
 * **`ScalarSinglet`**: the Higgs-portal real scalar of Sec. III of the paper, with
   `QuarkScattering::{Maximal, Minimal}` (scenarios A and B) and the HDECAY Higgs width.

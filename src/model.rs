@@ -149,7 +149,7 @@ pub fn lab_velocity(s: f64, mass: f64) -> f64 {
 /// A model assembled from closures, for quick experiments.
 ///
 /// ```
-/// use dmphase::prelude::*;
+/// use freezeframe::prelude::*;
 /// // p-wave annihilation σv = b v_cms²/4 with a constant momentum-transfer rate
 /// let m = 100.0;
 /// let model = ModelFn::new(m, 1.0, move |s| 1e-8 * (1.0 - 4.0 * m * m / s), |t| 1e-12 * t.powi(6));
