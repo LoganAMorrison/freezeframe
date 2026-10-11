@@ -8,12 +8,19 @@
 //!             [ε sqrt((s̃−1)(ε²−1)) − atanh(sqrt((s̃−1)(ε²−1))/(sqrt(s̃) ε))/sqrt(s̃)],  a = 2x sqrt s̃   (Eq. 30)
 //! ```
 //!
-//! The `s̃` integral is done in `v` with `v² = 2x(sqrt s̃ − 1)`, on panels
-//! that are refined (atan-spaced) around declared resonances and split at
-//! declared thresholds.
+//! The `s̃` integral is done in `v` with `v² = 2x(sqrt s̃ − 1)` by 6-point
+//! Gauss–Legendre panels on a fixed `v` grid, split at declared thresholds
+//! and refined around every declared resonance `(s̃_R, w)` with edges at
+//! `s̃_R` and `s̃_R ± w·2^k` out to both ends of the range
+//! (`math::peak_edges`). Outside the core each panel spans a factor of two
+//! in distance from the pole, so the Breit–Wigner core and its `1/(s̃ − s̃_R)²`
+//! tails are integrated to ~1e-9 relative accuracy independent of the
+//! width, at a cost of about `2 log₂(range/w)` edges per resonance. Poles
+//! just below threshold or above the upper limit get the offsets that fall
+//! inside the range, which resolve the tails reaching into it.
 
 use crate::error::{Error, Result};
-use crate::math::{bessel_k_scaled, gauss_legendre, CubicSpline, Extrapolation};
+use crate::math::{bessel_k_scaled, gauss_legendre, peak_edges, CubicSpline, Extrapolation};
 use crate::model::{fprime, resonances_st, thresholds_st, DarkMatterModel};
 
 /// Upper limit of `v² = 2x(sqrt s̃ − 1)`; the integrand is `∝ e^{−v²}`.
@@ -26,17 +33,7 @@ fn breakpoints(resonances: &[(f64, f64)], thresholds: &[f64], x: f64) -> Vec<f64
     let mut bp: Vec<f64> = (0..=48).map(|i| v_max * i as f64 / 48.0).collect();
     bp.extend((1..40).map(|k| v_max / 48.0 * 0.7_f64.powi(k)));
     for &(sr, w) in resonances {
-        if sr > 1.0 - 50.0 * w && sr < st_hi + 50.0 * w {
-            let th0 = ((1.0 - sr) / w).atan();
-            let th1 = ((st_hi - sr) / w).atan();
-            const N: usize = 160;
-            bp.extend(
-                (0..=N)
-                    .map(|k| sr + w * (th0 + (th1 - th0) * k as f64 / N as f64).tan())
-                    .filter(|&st| st > 1.0 && st < st_hi)
-                    .map(v_of_st),
-            );
-        }
+        bp.extend(peak_edges(sr, w, 1.0, st_hi).into_iter().map(v_of_st));
     }
     bp.extend(
         thresholds
@@ -228,5 +225,76 @@ mod tests {
         assert!(mb_w34(1e6) < 1e-5);
         // w(x=10) = 0.826 (paper quotes ≈ 0.8)
         assert!(((1.0 - 0.5 * mb_w34(10.0)) - 0.826).abs() < 1e-3);
+    }
+
+    /// The `s̃` kernels of Eqs. 14 and 30 at `s̃ = 1 + u`, so that
+    /// `⟨σv⟩ = ∫ ds̃ F'(s̃) kernels(s̃ − 1, x).0` and likewise for `⟨σv⟩₂`.
+    fn kernels(u: f64, x: f64) -> (f64, f64) {
+        let st = 1.0 + u;
+        let (t, k2) = (st.sqrt(), bessel_k_scaled(2.0, x));
+        let a = 2.0 * x * t;
+        // K₁(a)/K₂(x)² = e^{−2x(t−1)} K₁ₛ(a)/K₂ₛ(x)² with Kₛ(z) = e^z K(z)
+        let damp = (-2.0 * x * u / (1.0 + t)).exp() / (k2 * k2);
+        if damp == 0.0 {
+            return (0.0, 0.0);
+        }
+        let k1 = damp * 2.0 * x * u.sqrt() * bessel_k_scaled(1.0, a);
+        let br = u.sqrt() * bessel_k_scaled(2.0, a) / a - log_term(st, a) / (t * a);
+        (k1, damp * 4.0 * st * x.powi(3) / 3.0 * br)
+    }
+
+    /// A π⁰-like pole 1% above threshold with `Γ/M = 6e-8` against the
+    /// narrow-width approximation `∫ ds̃ F' K → c s̃_R³ (π/w) K(s̃_R)`. Its
+    /// own error is `O(w/(s̃_R − 1)) ≈ 3e-6` here; a Breit–Wigner tail lost
+    /// to coarse panels shows up as a deficit of ~1%.
+    #[test]
+    fn narrow_resonance_matches_narrow_width_limit() {
+        use std::f64::consts::PI;
+        let (mp, gamma) = (0.1349768, 7.8e-9);
+        let m = 0.99 * mp / 2.0;
+        let c = (1.6e-4 / 137.035999_f64).powi(2) * m * m / (4.0 * PI.powi(3));
+        let sigma = move |s: f64| c * s * s / ((s - mp * mp).powi(2) + (mp * gamma).powi(2));
+        let model = ModelFn::new(m, 2.0, sigma, |_| 0.0).with_resonance(mp, gamma);
+        let (sr, w) = (mp * mp / (4.0 * m * m), mp * gamma / (4.0 * m * m));
+        let area = c * sr.powi(3) * PI / w;
+        for x in [20.0, 100.0] {
+            let (k1, k2) = kernels(sr - 1.0, x);
+            let (a, b) = thermal_averages(&model, x, true);
+            let (ra, rb) = (a / (area * k1), b / (area * k2));
+            assert!((ra - 1.0).abs() < 1e-5, "x = {x}: ⟨σv⟩/NWA = {ra}");
+            assert!((rb - 1.0).abs() < 1e-5, "x = {x}: ⟨σv⟩₂/NWA = {rb}");
+        }
+    }
+
+    /// A pole 100 widths below threshold, whose tail dominates `F'` near
+    /// `s̃ = 1`, against the integral over `s̃ − s̃_R = w cot φ`. There the
+    /// Breit–Wigner times the Jacobian is exactly `1/w`, and `φ = φ₁ e^{−r²}`
+    /// removes the threshold square root and spreads the thermal cutoff at
+    /// `φ ~ wx` over `r`.
+    #[test]
+    fn subthreshold_resonance_tail() {
+        let (m, w, delta) = (1.0, 1e-7, 1e-5);
+        let g = |st: f64| 1e-9 * st * st * (1.0 + 0.3 * (st - 1.0));
+        let sigma = move |s: f64| {
+            let st = s / (4.0 * m * m);
+            g(st) / st / ((st - 1.0 + delta).powi(2) + w * w)
+        };
+        let mr = 2.0 * m * (1.0 - delta).sqrt();
+        let model = ModelFn::new(m, 2.0, sigma, |_| 0.0).with_resonance(mr, 4.0 * m * m * w / mr);
+        let phi1 = (w / delta).atan();
+        let edges: Vec<f64> = (0..=300).map(|k| 6.0 * k as f64 / 300.0).collect();
+        for x in [20.0, 1e3] {
+            let reference = |moment: fn((f64, f64)) -> f64| {
+                gauss_legendre(16).integrate_panels(&edges, |r| {
+                    let phi = phi1 * (-r * r).exp();
+                    let u = (w / phi.tan() - delta).max(0.0);
+                    2.0 * r * phi * g(1.0 + u) * moment(kernels(u, x)) / w
+                })
+            };
+            let (a, b) = thermal_averages(&model, x, true);
+            let (ra, rb) = (reference(|k| k.0), reference(|k| k.1));
+            assert!((a / ra - 1.0).abs() < 1e-8, "x = {x}: ⟨σv⟩ {a} vs {ra}");
+            assert!((b / rb - 1.0).abs() < 1e-8, "x = {x}: ⟨σv⟩₂ {b} vs {rb}");
+        }
     }
 }

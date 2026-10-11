@@ -11,12 +11,21 @@
 //! Annihilation `χχ̄ → f f̄` (spin averaged, angle integrated, `D = s − M² + iMΓ`):
 //!
 //! ```text
-//! σv_cms = N_c g_χ² g_f² β_f /(8π s |D|²) · A(s)
+//! σv_cms = N_c g_χ² g_f² β_f /(8π s) · [ A(s)/|D|² + C ]
 //!   A_S = (s − 4m²)(s − 4m_f²)             (p-wave)
 //!   A_P = s²                               (s-wave)
 //!   A_V = (4/3)(s + 2m²)(s + 2m_f²)        (s-wave)
-//!   A_A = (4/3)(s − 4m²)(s − 4m_f²) + 16 m² m_f² (1 − s/M²)²   (p-wave + helicity-suppressed s-wave)
+//!   A_A = (4/3)(s − 4m²)(s − 4m_f²)        (p-wave, spin-1 part of the exchange)
+//!   C_A = 16 m² m_f² / M⁴                  (helicity-suppressed s-wave, spin-0 part)
 //! ```
+//!
+//! The contact term `C` is nonzero only for the axial-vector, whose current is
+//! not conserved. The spin-0 projection of the Proca propagator,
+//! `(−g^{μν} + q^μ q^ν/M²)/(s − M²) = −(g^{μν} − q^μ q^ν/s)/(s − M²) + q^μ q^ν/(s M²)`,
+//! has no pole, so the Breit–Wigner width enters only the transverse part,
+//! `Π^{μν} = −(g^{μν} − q^μ q^ν/s)/D + q^μ q^ν/(s M²)`. The two parts do not
+//! interfere. This is the tree-level prescription and not a loop-consistent
+//! resummation of the width.
 //!
 //! Elastic scattering `χ f → χ f` (summed over all spins, `Σ = m² + m_f²`,
 //! `u = 2Σ − s − t`):
@@ -69,18 +78,19 @@ impl Mediator {
         }
     }
 
-    /// Spin-averaged, angle-integrated `χχ̄ → f f̄` numerator `A(s)` for unit
-    /// couplings and colors.
-    fn annihilation_numerator(self, s: f64, m: f64, mf: f64, big_m: f64) -> f64 {
+    /// Spin-averaged, angle-integrated `χχ̄ → f f̄` numerators for unit
+    /// couplings and colors, as the pair `(A, C)` of the module docs: `A` is
+    /// divided by `|D|²` and `C` is a width-independent contact term.
+    fn annihilation_numerators(self, s: f64, m: f64, mf: f64, big_m: f64) -> (f64, f64) {
         let (m2, mf2) = (m * m, mf * mf);
         match self {
-            Self::Scalar => (s - 4.0 * m2) * (s - 4.0 * mf2),
-            Self::Pseudoscalar => s * s,
-            Self::Vector => 4.0 / 3.0 * (s + 2.0 * m2) * (s + 2.0 * mf2),
-            Self::AxialVector => {
-                4.0 / 3.0 * (s - 4.0 * m2) * (s - 4.0 * mf2)
-                    + 16.0 * m2 * mf2 * (1.0 - s / (big_m * big_m)).powi(2)
-            }
+            Self::Scalar => ((s - 4.0 * m2) * (s - 4.0 * mf2), 0.0),
+            Self::Pseudoscalar => (s * s, 0.0),
+            Self::Vector => (4.0 / 3.0 * (s + 2.0 * m2) * (s + 2.0 * mf2), 0.0),
+            Self::AxialVector => (
+                4.0 / 3.0 * (s - 4.0 * m2) * (s - 4.0 * mf2),
+                16.0 * m2 * mf2 / big_m.powi(4),
+            ),
         }
     }
 
@@ -293,14 +303,15 @@ impl DarkMatterModel for SimplifiedModel {
     fn sigma_v(&self, s: f64) -> f64 {
         let (m, big_m) = (self.m_dm, self.m_med);
         let d2 = (s - big_m * big_m).powi(2) + (big_m * self.width).powi(2);
-        let pref = (self.g_dm * self.g_dm) / (8.0 * PI * s * d2);
+        let pref = (self.g_dm * self.g_dm) / (8.0 * PI * s);
         self.sm
             .iter()
             .filter(|(f, _)| s > 4.0 * f.mass().powi(2))
             .map(|&(f, g)| {
                 let mf = f.mass();
                 let beta = (1.0 - 4.0 * mf * mf / s).sqrt();
-                f.colors() * g * g * beta * self.mediator.annihilation_numerator(s, m, mf, big_m)
+                let (resonant, contact) = self.mediator.annihilation_numerators(s, m, mf, big_m);
+                f.colors() * g * g * beta * (resonant / d2 + contact)
             })
             .sum::<f64>()
             * pref
@@ -338,6 +349,18 @@ mod tests {
             .unwrap()
     }
 
+    fn axial_model(m: f64, big_m: f64, gx: f64, gf: f64, extra_width: f64) -> SimplifiedModel {
+        SimplifiedModel::builder(Mediator::AxialVector)
+            .dm_mass(m)
+            .mediator_mass(big_m)
+            .dm_coupling(gx)
+            .sm_coupling(SmFermion::Electron, gf)
+            .sm_coupling(SmFermion::Muon, gf)
+            .extra_width(extra_width)
+            .build()
+            .unwrap()
+    }
+
     /// Non-relativistic limits: σv(v→0) for the s-wave channels.
     #[test]
     fn s_wave_limits() {
@@ -363,6 +386,72 @@ mod tests {
         }
         // p-wave: vanishes at threshold
         assert!(model(Mediator::Scalar).sigma_v(s0) < 1e-9 * model(Mediator::Vector).sigma_v(s0));
+    }
+
+    /// Axial-vector exchange at `M = 2m`, with both leptons open: at `s = M²`
+    /// the transverse part vanishes and the cross section is the contact term.
+    #[test]
+    fn axial_contact_at_resonant_threshold() {
+        let (m, gx, gf) = (0.5_f64, 0.3_f64, 0.01_f64);
+        let big_m = 2.0 * m;
+        let mdl = axial_model(m, big_m, gx, gf, 0.0);
+        let s = big_m * big_m;
+        let want: f64 = [SmFermion::Electron, SmFermion::Muon]
+            .iter()
+            .map(|f| {
+                let mf = f.mass();
+                let beta = (1.0 - 4.0 * mf * mf / s).sqrt();
+                f.colors() * gx * gx * gf * gf * beta * 16.0 * m * m * mf * mf
+                    / (8.0 * PI * s * big_m.powi(4))
+            })
+            .sum();
+        let got = mdl.sigma_v(s);
+        assert!(
+            got > 0.0 && (got / want - 1.0).abs() < 1e-12,
+            "{got} vs {want}"
+        );
+    }
+
+    /// The contact term does not depend on the mediator width.
+    #[test]
+    fn axial_contact_is_width_independent() {
+        let (m, big_m) = (0.5, 1.0);
+        let s = big_m * big_m;
+        let base = axial_model(m, big_m, 0.3, 0.01, 0.0).sigma_v(s);
+        for w in [1e-3, 0.1] {
+            let got = axial_model(m, big_m, 0.3, 0.01, w).sigma_v(s);
+            assert!((got / base - 1.0).abs() < 1e-12, "extra width {w}");
+        }
+    }
+
+    /// For a massless final state the axial-vector exchange is purely
+    /// transverse: the contact term vanishes and `A` is the vector-like
+    /// `(4/3) s (s − 4m²)`.
+    #[test]
+    fn axial_contact_vanishes_for_massless_fermion() {
+        let (s, m, big_m) = (3.0, 0.5, 1.0);
+        let (resonant, contact) = Mediator::AxialVector.annihilation_numerators(s, m, 0.0, big_m);
+        assert_eq!(contact, 0.0);
+        assert!((resonant / (4.0 / 3.0 * s * (s - 4.0 * m * m)) - 1.0).abs() < 1e-15);
+    }
+
+    /// For `Γ → 0` away from the pole the split propagator reduces to the
+    /// Proca propagator, `[A + 16 m² m_f² (1 − s/M²)²]/(s − M²)²`.
+    #[test]
+    fn axial_zero_width_limit_is_proca() {
+        let (m, big_m, g, s) = (0.5_f64, 1.0_f64, 1e-4_f64, 3.0_f64);
+        let mdl = axial_model(m, big_m, g, g, 0.0);
+        let want: f64 = [SmFermion::Electron, SmFermion::Muon]
+            .iter()
+            .map(|f| {
+                let (m2, mf2) = (m * m, f.mass().powi(2));
+                let beta = (1.0 - 4.0 * mf2 / s).sqrt();
+                let numerator = 4.0 / 3.0 * (s - 4.0 * m2) * (s - 4.0 * mf2)
+                    + 16.0 * m2 * mf2 * (1.0 - s / (big_m * big_m)).powi(2);
+                g.powi(4) * beta * numerator / (8.0 * PI * s * (s - big_m * big_m).powi(2))
+            })
+            .sum();
+        assert!((mdl.sigma_v(s) / want - 1.0).abs() < 1e-9);
     }
 
     /// Pseudoscalar scattering is suppressed by ~|t|/(4m²) ∝ (T/m)² relative

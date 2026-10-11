@@ -224,12 +224,15 @@ particles), mediator production, and constraints on such couplings are not inclu
 
 ## Validation
 
-`cargo test --release` (31 tests, ~25 s) covers, among others:
+`cargo test --release` (39 tests, ~30 s) covers, among others:
 
 * quadrature, Bessel functions (vs SciPy), splines, LU, the Rosenbrock integrator (Robertson problem);
 * `⟨σv⟩ = ⟨σv⟩₂ = 1` for `σv_lab = 1` at `x = 1 … 10⁶`; `w(x = 10) = 0.826`;
+* a narrow resonance (`Γ/M = 6·10⁻⁸`) against the narrow-width limit to 10⁻⁵, a pole below
+  threshold against a direct integral, and the tabulated `Φ` of a pole against its closed form;
 * the generic `γ(T)` integral against the closed form of Eq. (29) for the Scalar Singlet;
-* simplified-model s-wave limits and pseudoscalar momentum suppression;
+* simplified-model s-wave limits, pseudoscalar momentum suppression, and the width-independent
+  axial-vector contact term (finite at `s = M² = 4m²`, Proca limit at `Γ → 0`);
 * number conservation without annihilation (10⁻¹⁵ for `γ/H ≤ 10⁶`);
 * the tight-coupling limit (`γ = 10⁶ H`): fBE, cBE and nBE agree to < 0.3%;
 * free streaming: `y` from the fBE and the cBE agree to 1%, `x_kd ≈ 11.5`;
