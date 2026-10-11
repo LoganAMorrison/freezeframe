@@ -120,7 +120,7 @@ pub(crate) struct PhaseSpace<'a, M: ?Sized> {
     cosmo: &'a Cosmology,
     dof: f64,
     n: usize,
-    /// comoving cell centres, edges and volumes `∫ q̂² dq̂`
+    /// comoving cell centers, edges and volumes `∫ q̂² dq̂`
     pub(crate) q_hat: Vec<f64>,
     pub(crate) qe_hat: Vec<f64>,
     pub(crate) vol_hat: Vec<f64>,
@@ -202,7 +202,7 @@ impl<'a, M: DarkMatterModel + ?Sized> PhaseSpace<'a, M> {
         }
     }
 
-    /// `f_eq = e^{−E/T}` on the cell centres (at `x_start`, where `r = 1`).
+    /// `f_eq = e^{−E/T}` on the cell centers (at `x_start`, where `r = 1`).
     pub(crate) fn equilibrium_distribution(&self, x: f64) -> Vec<f64> {
         self.q_hat
             .iter()

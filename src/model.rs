@@ -60,7 +60,7 @@ pub trait DarkMatterModel {
     /// Dark-matter mass `m_χ` \[GeV\].
     fn mass(&self) -> f64;
 
-    /// Internal degrees of freedom `g_χ` of one particle (spin, colour, ...).
+    /// Internal degrees of freedom `g_χ` of one particle (spin, color, ...).
     fn dof(&self) -> f64;
 
     /// Self-conjugate or distinct particle–antiparticle pair.
@@ -68,7 +68,7 @@ pub trait DarkMatterModel {
         ParticleKind::SelfConjugate
     }
 
-    /// `σ v_cms` \[GeV⁻²\] at centre-of-mass energy squared `s > 4 m_χ²`.
+    /// `σ v_cms` \[GeV⁻²\] at center-of-mass energy squared `s > 4 m_χ²`.
     fn sigma_v(&self, s: f64) -> f64;
 
     /// Momentum-transfer rate `γ(T)` \[GeV\] at photon temperature `T` \[GeV\].

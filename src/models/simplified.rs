@@ -70,7 +70,7 @@ impl Mediator {
     }
 
     /// Spin-averaged, angle-integrated `χχ̄ → f f̄` numerator `A(s)` for unit
-    /// couplings and colours.
+    /// couplings and colors.
     fn annihilation_numerator(self, s: f64, m: f64, mf: f64, big_m: f64) -> f64 {
         let (m2, mf2) = (m * m, mf * mf);
         match self {
@@ -85,7 +85,7 @@ impl Mediator {
     }
 
     /// Spin-summed `χ f → χ f` matrix element times `(t − M²)²`, unit
-    /// couplings and colours.
+    /// couplings and colors.
     fn scattering_numerator(self, s: f64, t: f64, m: f64, mf: f64, big_m: f64) -> f64 {
         let (m2, mf2) = (m * m, mf * mf);
         let sig = m2 + mf2;
@@ -102,7 +102,7 @@ impl Mediator {
     }
 
     /// Partial width into a fermion pair of mass `mf` for unit coupling
-    /// and colour.
+    /// and color.
     pub fn partial_width(self, big_m: f64, mf: f64) -> f64 {
         if big_m <= 2.0 * mf {
             return 0.0;

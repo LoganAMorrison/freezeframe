@@ -34,9 +34,9 @@ def load_snaps(fam, m):
     return {x: (a[:, 2 * k], a[:, 2 * k + 1]) for k, x in enumerate(xs)}
 
 
-# ----------------------------------------------------------------- colours
+# ----------------------------------------------------------------- colors
 METHOD = {"nBE": "#7f7f7f", "cBE": "#4C72B0", "fBE": "#C44E52"}
-MED = {  # mediator -> (label, colour, marker)
+MED = {  # mediator -> (label, color, marker)
     "pseudoscalar": ("pseudoscalar", "#4C72B0", "o"),
     "vector": ("vector", "#55A868", "s"),
     "axial": ("axial-vector", "#C44E52", "^"),

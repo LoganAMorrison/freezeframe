@@ -1,6 +1,6 @@
 use crate::error::{Error, Result};
 
-/// Behaviour of a [`CubicSpline`] outside its tabulated range.
+/// Behavior of a [`CubicSpline`] outside its tabulated range.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
 pub enum Extrapolation {
     /// Return the end value.

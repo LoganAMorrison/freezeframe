@@ -102,7 +102,7 @@ Conventions (identical to the paper):
 k⁴⟨|M|²⟩_t = (1/8) ∫_{−4k_cm²}^0 dt (−t) |M|²(s, t),   s = m² + 2ωm + m_f²,  k_cm² = k²m²/s,
 ```
 
-from an elastic matrix element summed over all spins and colours:
+from an elastic matrix element summed over all spins and colors:
 
 ```rust
 use dmphase::scattering::{RateTable, Scatterer};
@@ -268,7 +268,7 @@ src/
   kernel.rs         rapidity-space annihilation kernel (Φ, Φ₁, Φ₂ tables)
   thermal.rs        ⟨σv⟩, ⟨σv⟩₂ tables; Maxwell–Boltzmann moments
   scattering.rs     γ(T) from |M|²(s, t); RateTable
-  cosmology.rs      h_eff, g_eff, g̃, H, s; Ωh² normalisation
+  cosmology.rs      h_eff, g_eff, g̃, H, s; Ωh² normalization
   relic.rs          coupling search
   ode.rs            Rosenbrock integrator
   math/             quadrature, Bessel K_ν, splines, LU

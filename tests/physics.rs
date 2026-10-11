@@ -88,7 +88,7 @@ fn trait_objects_and_coupling_search() {
         &search,
     )
     .unwrap();
-    // earlier reproduction: λ_GG(45 GeV) = 0.1752 with the 0.4% different Ω normalisation
+    // earlier reproduction: λ_GG(45 GeV) = 0.1752 with the 0.4% different Ω normalization
     assert!(
         (sol.coupling / 0.1752 - 1.0).abs() < 1e-2,
         "{}",

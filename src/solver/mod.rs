@@ -156,7 +156,7 @@ impl TracePoint {
 pub struct Snapshot {
     /// `x = m/T`.
     pub x: f64,
-    /// Cell centres in `q = p/T` at this `x`. (The grid is comoving: it
+    /// Cell centers in `q = p/T` at this `x`. (The grid is comoving: it
     /// shrinks in `q` by `[h_eff(T)/h_eff(T_start)]^{1/3}` as entropy is
     /// transferred to the photon bath.)
     pub q: Vec<f64>,
@@ -230,7 +230,7 @@ impl Solution {
     pub fn snapshots(&self) -> &[Snapshot] {
         &self.snapshots
     }
-    /// Comoving cell centres `q̂_i` (equal to `q = p/T` at `x_start`).
+    /// Comoving cell centers `q̂_i` (equal to `q = p/T` at `x_start`).
     pub fn momentum_grid(&self) -> Option<&[f64]> {
         self.grid.as_deref()
     }
@@ -614,7 +614,7 @@ struct Recorder<'r, Mo, Eq> {
     trace: Vec<TracePoint>,
     snapshots: Vec<Snapshot>,
     decoupling: Decoupling,
-    /// comoving centres and `r(x)` for phase-space snapshots
+    /// comoving centers and `r(x)` for phase-space snapshots
     grid_scale: Option<&'r dyn Fn(f64) -> f64>,
     grid_hat: &'r [f64],
 }

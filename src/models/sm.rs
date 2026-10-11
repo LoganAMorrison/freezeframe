@@ -1,7 +1,7 @@
 /// Standard-Model fermions that a mediator can couple to.
 ///
 /// Masses are those used by DRAKE v1.0 (quark masses are running masses
-/// relevant for scattering); `N_c` is the number of colours.
+/// relevant for scattering); `N_c` is the number of colors.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub enum SmFermion {
     /// e
@@ -56,7 +56,7 @@ impl SmFermion {
         }
     }
 
-    /// Number of colours.
+    /// Number of colors.
     pub fn colors(self) -> f64 {
         if self.is_quark() {
             3.0
