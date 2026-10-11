@@ -1,0 +1,8 @@
+[package]
+name = "ff_evidence"
+version = "0.0.0"
+edition = "2021"
+[dependencies]
+freezeframe = { path = "<freezeframe checkout>" }
+[profile.release]
+opt-level = 3
