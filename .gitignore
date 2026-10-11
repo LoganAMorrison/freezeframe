@@ -1,0 +1,11 @@
+# Cargo build output
+/target/
+
+# rustfmt backup files
+**/*.rs.bk
+
+# MSVC debug symbols
+*.pdb
+
+# cargo-mutants output
+mutants.out*/
