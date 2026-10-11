@@ -9,5 +9,6 @@ mod spline;
 
 pub use bessel::bessel_k_scaled;
 pub use linalg::{DenseMatrix, LuFactors};
+pub(crate) use quadrature::peak_edges;
 pub use quadrature::{gauss_legendre, GaussLegendre};
 pub use spline::{CubicSpline, Extrapolation};

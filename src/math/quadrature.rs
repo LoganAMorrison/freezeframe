@@ -84,9 +84,45 @@ pub fn gauss_legendre(n: usize) -> &'static GaussLegendre {
     RULES[n].get_or_init(|| GaussLegendre::new(n))
 }
 
+/// Panel edges inside the open interval `(lo, hi)` that resolve a peak of
+/// half-width `half_width > 0` at `center`, such as the Breit–Wigner
+/// `1/((t − center)² + half_width²)`: the center itself and the offsets
+/// `center ± half_width·2^k`, `k = −1, 0, 1, …`, until both sides have left
+/// the interval. The two core panels span half a width each, and every
+/// other panel spans a factor of two in distance from the center, so a
+/// fixed Gauss–Legendre rule on each panel integrates the core and the
+/// `1/(t − center)²` tails with uniform relative accuracy (about 1e-9 for
+/// 6 points) on about `log₂((hi − lo)/half_width)` panels per side. A
+/// center outside the interval contributes only the offsets that fall
+/// inside, which covers poles below threshold or beyond the range.
+pub(crate) fn peak_edges(center: f64, half_width: f64, lo: f64, hi: f64) -> Vec<f64> {
+    let reach = (center - lo).max(hi - center);
+    let mut edges = vec![center];
+    let mut d = 0.5 * half_width;
+    while d < reach {
+        edges.extend([center - d, center + d]);
+        d *= 2.0;
+    }
+    edges.retain(|&t| t > lo && t < hi);
+    edges
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn peak_edges_resolve_lorentzian() {
+        // ∫ dt/(t² + 1) over (−1e3, 1e8) with 6-point panels split at the edges
+        let (lo, hi): (f64, f64) = (-1e3, 1e8);
+        let mut edges = peak_edges(0.0, 1.0, lo, hi);
+        assert!(edges.len() < 2 * 30);
+        edges.extend([lo, hi]);
+        edges.sort_by(f64::total_cmp);
+        let got = gauss_legendre(6).integrate_panels(&edges, |t| 1.0 / (t * t + 1.0));
+        let want = hi.atan() - lo.atan();
+        assert!((got / want - 1.0).abs() < 1e-9, "{got} vs {want}");
+    }
 
     #[test]
     fn integrates_polynomials_exactly() {

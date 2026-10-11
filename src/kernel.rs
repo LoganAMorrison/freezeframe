@@ -9,12 +9,18 @@
 //! Φ(z) = F(cosh²(z/2)),   Φ₁ = ∫_0^z Φ,   Φ₂ = ∫_0^z Φ₁
 //! ```
 //!
-//! with quintic Hermite interpolation on a grid that is refined
-//! (atan-spaced) around every declared resonance. The integral of the kernel
-//! over a momentum cell of the piecewise-constant `f` is then exact in the
-//! sharp Breit–Wigner factor and second order in the smooth Jacobian `sinh η̃`.
+//! with quintic Hermite interpolation. The grid is uniform in `z`, geometric
+//! near `z = 0`, and refined around every declared resonance `(s̃_R, w)` by
+//! nodes at `s̃_R` and `s̃_R ± w·2^k` out to both ends of the table
+//! (`math::peak_edges`), mapped to `z`. Outside the core every interval spans
+//! a factor of two in distance from the pole, so the 8-point Gauss–Legendre
+//! integration of `dΦ/dz` captures the Breit–Wigner core and its tails with
+//! no width-dependent loss of accuracy, and poles above, at or just below
+//! threshold are treated alike. The integral of the kernel over a momentum
+//! cell of the piecewise-constant `f` is then exact in the sharp Breit–Wigner
+//! factor and second order in the smooth Jacobian `sinh η̃`.
 
-use crate::math::gauss_legendre;
+use crate::math::{gauss_legendre, peak_edges};
 use crate::model::{fprime, resonances_st, thresholds_st, DarkMatterModel};
 
 #[derive(Clone, Debug)]
@@ -40,22 +46,9 @@ impl PhiTable {
         nodes.extend((1..=n_uniform).map(|k| k as f64 * DZ));
         let z_top = n_uniform as f64 * DZ;
         let z_of_st = |st: f64| 2.0 * st.sqrt().acosh();
+        let st_top = (0.5 * z_top).cosh().powi(2);
         for (sr, w) in resonances_st(model) {
-            if sr < 1.0 - 50.0 * w {
-                continue;
-            }
-            // Breit-Wigner half-width in z: w / (ds~/dz) = w / (sinh(z)/2) for a
-            // pole well above threshold, crossing over to ~sqrt(w) at s~_R -> 1.
-            let zr = z_of_st(sr.max(1.0));
-            let dzr = w / (0.5 * zr.sinh()).max(0.5 * w.sqrt());
-            let th0 = (-zr / dzr).atan();
-            let th1 = ((z_top - zr) / dzr).atan();
-            const N_RES: usize = 1200;
-            nodes.extend(
-                (1..N_RES)
-                    .map(|k| zr + dzr * (th0 + (th1 - th0) * k as f64 / N_RES as f64).tan())
-                    .filter(|&zz| zz > 0.0 && zz < z_top),
-            );
+            nodes.extend(peak_edges(sr, w, 1.0, st_top).into_iter().map(z_of_st));
         }
         nodes.extend(
             thresholds_st(model)
@@ -155,5 +148,38 @@ impl PhiTable {
         let p1 = p1a * h0 + h * pa * h1 + hh * f0a * h2 + p1b * h3 + h * pb * h4 + hh * f0b * h5;
         let p2 = p2a * h0 + h * p1a * h1 + hh * pa * h2 + p2b * h3 + h * p1b * h4 + hh * pb * h5;
         (if z < 0.0 { -p1 } else { p1 }, p2)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::model::ModelFn;
+
+    /// `F' = 1/((s̃ − s̃_R)² + w²)` has `F = [atan((s̃ − s̃_R)/w)]_1^s̃ / w`, so
+    /// `Φ` at every node is known in closed form. Tails that fall on
+    /// intervals much wider than their distance from the pole lose ~1e-5 of
+    /// the area here.
+    #[test]
+    fn narrow_resonance_area() {
+        let (m, sr, w) = (1.0, 4.0, 1e-6);
+        let model = ModelFn::new(
+            m,
+            1.0,
+            move |s: f64| {
+                let st = s / (4.0 * m * m);
+                1.0 / (st * ((st - sr).powi(2) + w * w))
+            },
+            |_| 0.0,
+        )
+        .with_resonance(2.0 * m * sr.sqrt(), 2.0 * m * w / sr.sqrt());
+        let table = PhiTable::new(&model, 5.0);
+        let f = |st: f64| (((st - sr) / w).atan() - ((1.0 - sr) / w).atan()) / w;
+        let area = std::f64::consts::PI / w;
+        for (&z, v) in table.z.iter().zip(&table.v) {
+            let st = (0.5 * z).cosh().powi(2);
+            let err = (v[1] - f(st)).abs() / area;
+            assert!(err < 1e-8, "z = {z}: relative error {err:.2e}");
+        }
     }
 }
