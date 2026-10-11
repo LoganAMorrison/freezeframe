@@ -287,3 +287,8 @@ scripts/            matrix-element checks, scan driver, plotting
   Eq. (15) of the paper; the coupled and full solutions are unaffected.
 * Planck target `Ωh² = 0.120` (`constants::OMEGA_DM_H2_PLANCK`); the paper used 0.1188.
 * SM inputs: `m_h = 125.09 GeV`, `v = 246.2 GeV`, `Γ_h = 4.042 MeV`, DRAKE fermion masses.
+
+## License
+
+Licensed under either of [Apache License, Version 2.0](LICENSE-APACHE) or
+[MIT license](LICENSE-MIT) at your option.

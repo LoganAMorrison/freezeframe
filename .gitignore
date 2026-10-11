@@ -9,3 +9,6 @@
 
 # cargo-mutants output
 mutants.out*/
+
+# macOS Finder metadata
+.DS_Store
