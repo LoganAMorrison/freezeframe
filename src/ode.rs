@@ -3,7 +3,7 @@
 //! This is the second-order method with embedded third-order error estimate of
 //! Shampine & Reichelt (SIAM J. Sci. Comput. 18, 1997), the method behind
 //! MATLAB's `ode23s` that the authors of arXiv:1706.07433 used. One LU
-//! factorisation of `I − h d J` per step, FSAL, and a continuous extension for
+//! factorization of `I − h d J` per step, FSAL, and a continuous extension for
 //! dense output.
 
 use std::ops::ControlFlow;
@@ -102,7 +102,7 @@ pub struct OdeStats {
     pub rhs_evals: usize,
     /// Jacobian evaluations.
     pub jacobian_evals: usize,
-    /// LU factorisations.
+    /// LU factorizations.
     pub factorizations: usize,
 }
 

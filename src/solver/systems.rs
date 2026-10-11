@@ -103,7 +103,7 @@ impl<M: DarkMatterModel + ?Sized> OdeSystem for Coupled<'_, M> {
 
 // --------------------------------------------------------------- full phase space
 
-/// Finite-volume discretisation of Eq. (BEps), piecewise-constant `f`.
+/// Finite-volume discretization of Eq. (BEps), piecewise-constant `f`.
 ///
 /// The momentum variable is the *comoving* `q̂ = q / r(x)` with
 /// `r = [h_eff(T)/h_eff(T_start)]^{1/3}`, i.e. `q̂ ∝ p a`. Since
@@ -382,7 +382,7 @@ impl KernelRows<'_> {
     }
 }
 
-/// `(Y, y)` from a discretised distribution on the comoving grid (Eqs. 16, 19).
+/// `(Y, y)` from a discretized distribution on the comoving grid (Eqs. 16, 19).
 #[derive(Clone, Debug)]
 pub(crate) struct GridMoments<'a> {
     pub mass: f64,

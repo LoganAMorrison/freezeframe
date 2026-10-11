@@ -197,7 +197,7 @@ Results of the mediator scan (`m_χ/m_med = 0.25 … 0.6`):
   becomes strongly non-thermal (`T_χ > T` transiently), and the coupled equations overestimate
   `Ω` by 40% relative to the full solution.
 
-Physics caveats for these benchmarks: DM self-scattering (which could re-thermalise `f` among DM
+Physics caveats for these benchmarks: DM self-scattering (which could re-thermalize `f` among DM
 particles), mediator production, and constraints on such couplings are not included.
 
 ## Numerical methods

@@ -1,6 +1,6 @@
 //! Self-contained numerical building blocks: Gauss–Legendre quadrature,
 //! exponentially scaled Bessel functions, cubic splines and dense LU
-//! factorisation. The crate deliberately has no external dependencies.
+//! factorization. The crate deliberately has no external dependencies.
 
 mod bessel;
 mod linalg;

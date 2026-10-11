@@ -67,7 +67,7 @@ impl IndexMut<(usize, usize)> for DenseMatrix {
     }
 }
 
-/// LU factorisation with partial pivoting, `P A = L U`, stored in place.
+/// LU factorization with partial pivoting, `P A = L U`, stored in place.
 #[derive(Clone, Debug)]
 pub struct LuFactors {
     lu: DenseMatrix,
@@ -89,7 +89,7 @@ impl LuFactors {
         &mut self.lu
     }
 
-    /// Factorise the matrix currently held. Returns `false` when it is
+    /// Factorize the matrix currently held. Returns `false` when it is
     /// numerically singular.
     pub fn factorize(&mut self) -> bool {
         let n = self.lu.n;
